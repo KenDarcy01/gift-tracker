@@ -37,20 +37,28 @@ Deno.serve(async (request) => {
   if (!secret || !apiKey || !domain) return json({ error: "inbound email is not configured" }, 503);
 
   const payload = await request.text();
-  let event: ReceivedEvent;
   try {
-    event = new Webhook(secret).verify(payload, {
+    // Throws when the signature is wrong; svix 2.x returns nothing, so parse the body ourselves.
+    new Webhook(secret).verify(payload, {
       "svix-id": request.headers.get("svix-id") ?? "",
       "svix-timestamp": request.headers.get("svix-timestamp") ?? "",
       "svix-signature": request.headers.get("svix-signature") ?? "",
-    }) as unknown as ReceivedEvent;
+    });
   } catch {
     return json({ error: "invalid signature" }, 401);
   }
 
-  if (event.type !== "email.received") return json({ ignored: true });
+  let event: ReceivedEvent;
+  try {
+    event = JSON.parse(payload) as ReceivedEvent;
+  } catch {
+    return json({ ignored: "not JSON" });
+  }
+  if (event?.type !== "email.received" || !event.data?.email_id) return json({ ignored: true });
 
-  const tokens = tokensFor([...(event.data.to ?? []), ...(event.data.received_for ?? [])], domain);
+  const asList = (v: unknown): string[] => (Array.isArray(v) ? v : v ? [v] : []).filter((x): x is string => typeof x === "string");
+
+  const tokens = tokensFor([...asList(event.data.to), ...asList(event.data.received_for)], domain);
   if (tokens.length === 0) return json({ ignored: "no matching address" });
 
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
