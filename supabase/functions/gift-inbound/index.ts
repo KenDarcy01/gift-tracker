@@ -70,7 +70,12 @@ Deno.serve(async (request) => {
   const res = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(event.data.email_id)}`, {
     headers: { Authorization: `Bearer ${apiKey}` },
   });
-  if (!res.ok) return json({ error: `could not fetch email (${res.status})` }, 502); // Resend retries later.
+  if (!res.ok) {
+    // Resend's error body says why (e.g. a key with "Sending access" only can't read received emails).
+    const detail = (await res.text()).slice(0, 300);
+    console.error(`Resend refused to return email ${event.data.email_id}: ${res.status} ${detail}`);
+    return json({ error: `could not fetch email (${res.status})`, detail }, 502); // Resend retries later.
+  }
 
   const email = (await res.json()) as { text?: string | null; html?: string | null; subject?: string; from?: string; created_at?: string };
   const text = email.text?.trim() || (email.html ? htmlToText(email.html) : "");
