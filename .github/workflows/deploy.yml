@@ -34,8 +34,9 @@ jobs:
         env:
           # /<repo name> on github.io, or empty with a custom domain.
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          # Public values (row level security protects the data). Repo variables override them.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'https://fpgrghfzlpfxoshlamjo.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_NPOaC0P4Yx5KfJ2f7NHKtQ_oK317wRY' }}
           NEXT_PUBLIC_INBOUND_EMAIL_DOMAIN: ${{ vars.NEXT_PUBLIC_INBOUND_EMAIL_DOMAIN }}
       - uses: actions/upload-pages-artifact@v4
         with:
