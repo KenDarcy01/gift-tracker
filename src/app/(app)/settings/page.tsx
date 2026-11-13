@@ -55,7 +55,7 @@ export default function SettingsPage() {
       )}
 
       <section aria-labelledby="budget-h" className="card flex flex-col gap-3.5 p-4">
-        <h2 id="budget-h" className="text-[16px] font-bold">Budgets</h2>
+        <h2 id="budget-h" className="text-[16px] font-bold">Budgets and currency</h2>
         <SettingsForm overall={profile.overall_budget} warn={profile.warn_pct} allocated={allocated} peopleCount={people.length} />
         <Link href="/people" className="flex min-h-11 items-center justify-between border-t border-line-soft pt-1.5 text-[15px] font-semibold text-pine">
           Per-person budgets

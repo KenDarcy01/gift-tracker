@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { detectCarrier, getCarrier, normaliseTracking, trackingUrlFor } from "@/lib/carriers";
-import { parseMoney } from "@/lib/money";
+import { isCurrency, parseMoney } from "@/lib/money";
 import { todayISO } from "@/lib/dates";
 import { STATUSES, type ExtractedEmail, type GiftStatus } from "@/lib/types";
 
@@ -117,11 +117,16 @@ export async function saveSettings(userId: string, form: FormData): Promise<Resu
   const warn = Number(form.get("warn_pct"));
   if (Number.isNaN(overall)) return { error: "Budget should be an amount like 700." };
   if (!Number.isInteger(warn) || warn < 50 || warn > 100) return { error: "Warning level must be 50–100%." };
-  const { error } = await supabase()
-    .from("gift_profiles")
-    .update({ overall_budget: overall, warn_pct: warn })
-    .eq("id", userId);
-  return error ? { error: error.message } : {};
+  const currency = text(form, "currency", 3);
+  if (currency && !isCurrency(currency)) return { error: "Pick a currency from the list." };
+  const db = supabase();
+  const { error } = await db.from("gift_profiles").update({ overall_budget: overall, warn_pct: warn }).eq("id", userId);
+  if (error) return { error: error.message };
+  if (currency) {
+    const res = await db.auth.updateUser({ data: { gift_currency: currency } });
+    if (res.error) return { error: res.error.message };
+  }
+  return {};
 }
 
 /* ---------- Inbox ---------- */

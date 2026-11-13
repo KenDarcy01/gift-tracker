@@ -6,6 +6,7 @@ import { savePerson } from "@/lib/mutations";
 import { useData } from "@/lib/store";
 import type { Person } from "@/lib/types";
 import { FormError } from "./bits";
+import { currencySymbol } from "@/lib/money";
 
 export function PersonForm({ person }: { person?: Person }) {
   const router = useRouter();
@@ -41,7 +42,7 @@ export function PersonForm({ person }: { person?: Person }) {
             <input id="relation" name="relation" placeholder="Sister" maxLength={80} defaultValue={person?.relation ?? ""} className="field" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="budget" className="label">Budget (£)</label>
+            <label htmlFor="budget" className="label">Budget ({currencySymbol()})</label>
             <input id="budget" name="budget" inputMode="decimal" placeholder="50" defaultValue={person ? String(person.budget) : ""} className="field" />
           </div>
         </div>

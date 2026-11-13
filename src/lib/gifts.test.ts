@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { budgetLevel, budgetPct, isLate, spentOn } from "./gifts";
 import { addDays, daysToChristmas, shortDate, todayISO } from "./dates";
-import { money, parseMoney } from "./money";
+import { currencyOptions, currencySymbol, money, parseMoney, setCurrency } from "./money";
 
 describe("budgets", () => {
   it("only counts bought gifts as spent", () => {
@@ -51,5 +51,26 @@ describe("money", () => {
     expect(parseMoney("£1,234.50")).toBe(1234.5);
     expect(parseMoney("")).toBe(0);
     expect(Number.isNaN(parseMoney("abc"))).toBe(true);
+  });
+});
+
+describe("currency", () => {
+  it("formats amounts in the chosen currency", () => {
+    setCurrency("EUR");
+    expect(money(80)).toContain("€");
+    expect(currencySymbol()).toBe("€");
+    setCurrency("JPY");
+    expect(money(1200)).toContain("1,200");
+    setCurrency("nonsense");
+    expect(money(80)).toBe("£80");
+  });
+  it("reads a decimal comma", () => {
+    expect(parseMoney("12,50")).toBe(12.5);
+    expect(parseMoney("€1,250")).toBe(1250);
+  });
+  it("lists many currencies", () => {
+    const codes = currencyOptions().map((o) => o.code);
+    expect(codes.length).toBeGreaterThan(100);
+    expect(codes).toEqual(expect.arrayContaining(["EUR", "GBP", "USD"]));
   });
 });

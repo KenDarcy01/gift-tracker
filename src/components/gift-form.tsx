@@ -9,6 +9,7 @@ import { STATUS_CHIP, STATUS_LABEL } from "@/lib/gifts";
 import { STATUSES, type Gift, type GiftStatus, type Person } from "@/lib/types";
 import { AlertIcon, CheckIcon, ExternalIcon, TruckIcon } from "./icons";
 import { FormError } from "./bits";
+import { currencySymbol, money } from "@/lib/money";
 
 type Props = {
   gift?: Gift;
@@ -65,7 +66,7 @@ export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Pro
             {people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
-                {p.budget > 0 ? ` (${p.left < 0 ? `£${(-p.left).toFixed(2)} over` : `£${p.left.toFixed(2)} left`})` : ""}
+                {p.budget > 0 ? ` (${p.left < 0 ? `${money(-p.left)} over` : `${money(p.left)} left`})` : ""}
               </option>
             ))}
           </select>
@@ -111,7 +112,7 @@ export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Pro
             </datalist>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="cost" className="label">Cost (£)</label>
+            <label htmlFor="cost" className="label">Cost ({currencySymbol()})</label>
             <input id="cost" name="cost" inputMode="decimal" placeholder="0.00" defaultValue={gift ? gift.cost.toFixed(2) : ""} className="field" />
           </div>
         </div>

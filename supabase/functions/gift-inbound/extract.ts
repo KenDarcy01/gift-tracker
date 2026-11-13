@@ -9,9 +9,9 @@ const ExtractionSchema = z.object({
   store: z.string().nullable().describe("The shop the order was placed with, e.g. Amazon, Argos, John Lewis"),
   order_ref: z.string().nullable().describe("Order number exactly as shown"),
   items: z
-    .array(z.object({ name: z.string(), price: z.number().nullable().describe("Price in GBP for this line, including quantity") }))
+    .array(z.object({ name: z.string(), price: z.number().nullable().describe("Price for this line, including quantity") }))
     .describe("Products in the email. Short, human product names."),
-  total: z.number().nullable().describe("Order total in GBP"),
+  total: z.number().nullable().describe("Order total"),
   carrier: z.string().nullable().describe("Delivery company, e.g. Royal Mail, Evri, DPD"),
   tracking_number: z.string().nullable(),
   tracking_url: z.string().nullable().describe("Link to track the parcel, if one is given"),
@@ -29,7 +29,7 @@ export type Extraction = z.infer<typeof ExtractionSchema>;
 const SYSTEM = `You read shop emails that a UK user has forwarded to their Christmas gift tracker and pull out the order and delivery details.
 
 Rules:
-- Prices are in pounds sterling. Return numbers without the £ sign.
+- Return prices as plain numbers without currency symbols, in the currency the email uses.
 - Only report what the email states. Use null when a field isn't there; never guess tracking numbers or dates.
 - Dates: today's date is given below. Convert phrases like "arriving Tuesday" to YYYY-MM-DD.
 - Forwarded emails may include the forwarder's own header block; read the original email below it.

@@ -3,6 +3,7 @@
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { setCurrency } from "@/lib/money";
 import type { Gift, InboundEmail, Person, Profile } from "@/lib/types";
 
 export type AppData = {
@@ -63,7 +64,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      setData(await loadAll(auth.user.id));
+      const loaded = await loadAll(auth.user.id);
+      // Stored on the account so it follows the user to every device.
+      setCurrency(auth.user.user_metadata?.gift_currency);
+      setData(loaded);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
