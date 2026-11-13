@@ -42,5 +42,5 @@ cd supabase/functions/gift-inbound && deno test && deno check index.ts
 
 - Ideas don't count towards spending; a gift counts from **Purchased** onwards.
 - A gift is **late** when it's Purchased or Shipped and its expected delivery date has passed (UK time).
-- Carrier detection covers Royal Mail, Parcelforce, Evri, DPD, Yodel, UPS, DHL and Amazon Logistics (`supabase/functions/_shared/carriers.ts`, shared by the app and the Edge Function).
+- Carrier detection covers Royal Mail, Parcelforce, Evri, DPD, Yodel, UPS, DHL, Amazon Logistics and An Post, with DPD Ireland, Fastway and Nightline to choose from. Any other tracking number gets a 17TRACK link (`supabase/functions/_shared/carriers.ts`, shared by the app and the Edge Function).
 - Forwarded emails are treated as untrusted. The Edge Function verifies Resend's signature, and the Claude prompt ignores instructions inside emails.

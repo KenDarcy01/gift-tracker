@@ -156,7 +156,9 @@ export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Pro
             {tracking && carrierChoice === "auto" && detected && (
               <p className="flex items-center gap-1.5 text-[13px] font-semibold text-st-delivered">
                 <CheckIcon size={16} />
-                Looks like {detected.name}, carrier set automatically
+                {detected.id === "17track"
+                  ? "Not a carrier we know, so it'll be tracked on 17TRACK"
+                  : `Looks like ${detected.name}, carrier set automatically`}
               </p>
             )}
             {tracking && carrierChoice === "auto" && !detected && (
