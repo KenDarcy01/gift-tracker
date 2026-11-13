@@ -45,7 +45,11 @@ describe("dates", () => {
 });
 
 describe("money", () => {
+  it("defaults to euros", () => {
+    expect(money(80)).toBe("€80");
+  });
   it("formats and parses pounds", () => {
+    setCurrency("GBP");
     expect(money(80)).toBe("£80");
     expect(money(44.99)).toBe("£44.99");
     expect(parseMoney("£1,234.50")).toBe(1234.5);
@@ -62,7 +66,7 @@ describe("currency", () => {
     setCurrency("JPY");
     expect(money(1200)).toContain("1,200");
     setCurrency("nonsense");
-    expect(money(80)).toBe("£80");
+    expect(money(80)).toBe("€80");
   });
   it("reads a decimal comma", () => {
     expect(parseMoney("12,50")).toBe(12.5);

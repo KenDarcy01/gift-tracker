@@ -1,5 +1,5 @@
 /** The currency every amount is shown in. Set from the user's settings when their data loads. */
-let currency = "GBP";
+let currency = "EUR";
 let exact: Intl.NumberFormat;
 let whole: Intl.NumberFormat;
 
@@ -9,7 +9,7 @@ function build() {
 }
 build();
 
-export const DEFAULT_CURRENCY = "GBP";
+export const DEFAULT_CURRENCY = "EUR";
 
 export function isCurrency(code: unknown): code is string {
   if (typeof code !== "string" || !/^[A-Z]{3}$/.test(code)) return false;
