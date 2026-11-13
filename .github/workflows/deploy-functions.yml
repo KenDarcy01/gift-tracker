@@ -34,3 +34,11 @@ jobs:
       - name: Explain skipped deploy
         if: env.SUPABASE_ACCESS_TOKEN == ''
         run: echo "::warning::Add a SUPABASE_ACCESS_TOKEN repository secret to deploy Edge Functions automatically."
+      - name: Smoke test gift-inbound
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        # An unsigned request must be refused (401). 503 means the function's secrets are missing.
+        run: |
+          sleep 5
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST -d '{}' "https://$PROJECT_REF.supabase.co/functions/v1/gift-inbound")
+          echo "gift-inbound answered $code to an unsigned request"
+          test "$code" = "401"
