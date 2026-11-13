@@ -1,10 +1,6 @@
-import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { carrierFromName, detectCarrier, normaliseTracking, trackingUrlFor } from "./carriers";
-import { extractEmail, extractionEnabled } from "./extract";
-import { shortDate, todayISO } from "./dates";
-import { moneyExact } from "./money";
-import { STATUSES, type Gift, type GiftStatus } from "./types";
+import { carrierFromName, detectCarrier, normaliseTracking, trackingUrlFor } from "../_shared/carriers.ts";
+import type { Extraction } from "./extract.ts";
 
 export type ReceivedEmail = {
   providerId: string;
@@ -14,6 +10,40 @@ export type ReceivedEmail = {
   receivedAt: string;
   text: string;
 };
+
+type Extractor = (input: {
+  subject: string | null;
+  from: string | null;
+  text: string;
+  today: string;
+  people: { name: string; relation: string | null; notes: string | null }[];
+}) => Promise<Extraction | null>;
+
+const STATUSES = ["idea", "purchased", "shipped", "delivered", "wrapped", "given"] as const;
+type GiftStatus = (typeof STATUSES)[number];
+
+type Gift = {
+  id: string;
+  status: GiftStatus;
+  cost: number | string;
+  carrier: string | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  expected_delivery: string | null;
+  order_ref: string | null;
+  delivered_on: string | null;
+};
+
+/** Today in the UK, as YYYY-MM-DD. */
+export function todayISO(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+function shortDate(iso: string): string {
+  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(
+    new Date(`${iso}T12:00:00Z`),
+  );
+}
 
 /** Pull plain text out of an HTML email well enough for extraction. */
 export function htmlToText(html: string): string {
@@ -43,14 +73,22 @@ export function gmailForwardingCode(from: string | null, subject: string | null,
   return code ?? (subject?.match(/#(\d{6,})/)?.[1] ?? null);
 }
 
-const RANK: Record<GiftStatus, number> = Object.fromEntries(STATUSES.map((s, i) => [s, i])) as Record<GiftStatus, number>;
+/** The inbox tokens in a list of recipient addresses at our domain. */
+export function tokensFor(recipients: string[], domain: string): string[] {
+  return recipients
+    .map((r) => r.toLowerCase().match(/<?([^<>\s@]+)@([^<>\s]+?)>?$/))
+    .filter((m): m is RegExpMatchArray => !!m && m[2] === domain.toLowerCase())
+    .map((m) => m[1].split("+")[0]);
+}
+
+const RANK = Object.fromEntries(STATUSES.map((s, i) => [s, i])) as Record<GiftStatus, number>;
 
 /** Move a status forward only, never backwards. */
 function advance(current: GiftStatus, to: GiftStatus): GiftStatus {
   return RANK[to] > RANK[current] ? to : current;
 }
 
-export async function processEmail(db: SupabaseClient, email: ReceivedEmail): Promise<void> {
+export async function processEmail(db: SupabaseClient, email: ReceivedEmail, extract: Extractor | null): Promise<void> {
   const base = {
     user_id: email.userId,
     provider_id: email.providerId,
@@ -70,17 +108,14 @@ export async function processEmail(db: SupabaseClient, email: ReceivedEmail): Pr
     return;
   }
 
-  if (!extractionEnabled()) {
+  if (!extract) {
     await save(db, { ...base, kind: "unknown", state: "unreadable", summary: "Email reading isn't switched on yet." });
     return;
   }
 
-  const { data: people } = await db
-    .from("gift_people")
-    .select("id, name, relation, notes")
-    .eq("user_id", email.userId);
+  const { data: people } = await db.from("gift_people").select("id, name, relation, notes").eq("user_id", email.userId);
 
-  const extracted = await extractEmail({
+  const extracted = await extract({
     subject: email.subject,
     from: email.from,
     text: email.text,
@@ -193,7 +228,7 @@ function describeUpdate(before: Gift, after: Partial<Gift>): string {
   if (after.status && after.status !== before.status) parts.push(`${cap(before.status)} to ${cap(after.status)}`);
   if (after.expected_delivery && after.expected_delivery !== before.expected_delivery) parts.push(`due ${shortDate(after.expected_delivery)}`);
   if (after.tracking_number && after.tracking_number !== before.tracking_number) parts.push(`tracking ${after.tracking_number} added`);
-  return parts.length ? parts.join(" · ") : `No changes needed (${moneyExact(Number(before.cost))})`;
+  return parts.length ? parts.join(" · ") : "Nothing new in this email";
 }
 
 function cap(s: string) {

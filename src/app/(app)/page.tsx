@@ -1,14 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import { AlertIcon, ChevronIcon, MailIcon, PlusIcon } from "@/components/icons";
 import { StatusChip } from "@/components/bits";
-import { countNeedsPerson, getProfile, listGifts, listPeople } from "@/lib/data";
+import { useData } from "@/lib/store";
 import { addDays, christmasYear, dayParts, daysBetween, daysToChristmas, longDate, shortDate, todayISO } from "@/lib/dates";
 import { inTransit, isLate, spentOn } from "@/lib/gifts";
 import { moneyExact } from "@/lib/money";
 import { STATUSES } from "@/lib/types";
 
-export default async function DashboardPage() {
-  const [profile, people, gifts, needsPerson] = await Promise.all([getProfile(), listPeople(), listGifts(), countNeedsPerson()]);
+export default function DashboardPage() {
+  const { profile, people, gifts, inbound } = useData();
+  const needsPerson = inbound.filter((e) => e.state === "needs_person").length;
   const today = todayISO();
   const personName = new Map(people.map((p) => [p.id, p.name]));
 
@@ -76,7 +79,7 @@ export default async function DashboardPage() {
           {late.map((g) => {
             const overdue = daysBetween(g.expected_delivery!, today);
             return (
-              <Link key={g.id} href={`/gifts/${g.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-card px-3.5 py-3">
+              <Link key={g.id} href={`/gifts/edit?id=${g.id}`} className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-card px-3.5 py-3">
                 <span className="flex flex-col gap-0.5">
                   <span className="text-[15px] font-semibold">{g.name}</span>
                   <span className="text-[13px] text-muted">
@@ -121,7 +124,7 @@ export default async function DashboardPage() {
               const { weekday, day } = dayParts(g.expected_delivery!);
               return (
                 <li key={g.id}>
-                  <Link href={`/gifts/${g.id}`} className="flex items-center gap-3.5 px-4 py-3.5">
+                  <Link href={`/gifts/edit?id=${g.id}`} className="flex items-center gap-3.5 px-4 py-3.5">
                     <span className="flex w-[46px] shrink-0 flex-col items-center rounded-[10px] bg-ground py-1.5">
                       <span className="text-[11px] font-bold text-muted">{weekday}</span>
                       <span className="text-[18px] font-bold">{day}</span>

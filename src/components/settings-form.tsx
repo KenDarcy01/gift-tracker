@@ -1,15 +1,27 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { saveSettings, type FormState } from "@/app/actions";
+import { useState, type FormEvent } from "react";
+import { saveSettings } from "@/lib/mutations";
+import { useData } from "@/lib/store";
 import { FormError } from "./bits";
 
 export function SettingsForm({ overall, warn, allocated, peopleCount }: { overall: number; warn: number; allocated: number; peopleCount: number }) {
-  const [state, action, pending] = useActionState<FormState, FormData>(saveSettings, {});
+  const { userId, reload } = useData();
+  const [state, setState] = useState<{ error?: string; ok?: boolean }>({});
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    const result = await saveSettings(userId, new FormData(e.currentTarget));
+    if (!result.error) await reload();
+    setState(result.error ? { error: result.error } : { ok: true });
+    setPending(false);
+  }
   const [warnPct, setWarnPct] = useState(warn);
   const unallocated = overall - allocated;
   return (
-    <form action={action} className="flex flex-col gap-3.5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-3.5">
       <FormError message={state.error} />
       <div className="flex flex-col gap-1.5">
         <label htmlFor="overall_budget" className="label">Overall Christmas budget (£)</label>

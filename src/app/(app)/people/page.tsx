@@ -1,11 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { BudgetBar, BudgetNote, Initial, PageTitle } from "@/components/bits";
-import { getProfile, listGifts, listPeople } from "@/lib/data";
+import { useData } from "@/lib/store";
 import { spentOn } from "@/lib/gifts";
 import { money } from "@/lib/money";
 
-export default async function PeoplePage() {
-  const [profile, people, gifts] = await Promise.all([getProfile(), listPeople(), listGifts()]);
+export default function PeoplePage() {
+  const { profile, people, gifts } = useData();
   const allocated = people.reduce((sum, p) => sum + p.budget, 0);
 
   return (
@@ -44,7 +46,7 @@ export default async function PeoplePage() {
             return (
               <li key={p.id}>
                 <Link
-                  href={`/people/${p.id}`}
+                  href={`/people/view?id=${p.id}`}
                   className={`card flex flex-col gap-2.5 px-4 py-3.5 ${over ? "border-berry-line" : ""}`}
                 >
                   <span className="flex items-center gap-3">

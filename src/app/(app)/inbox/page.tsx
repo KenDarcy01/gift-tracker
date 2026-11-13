@@ -1,13 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { PageTitle } from "@/components/bits";
 import { InboxOrderCard } from "@/components/inbox-order-card";
 import { DismissButton, UndoButton } from "@/components/undo-button";
-import { getProfile, inboxAddress, listGifts, listInbound, listPeople } from "@/lib/data";
+import { useData } from "@/lib/store";
+import { inboxAddress } from "@/lib/supabase/client";
 import { receivedLabel } from "@/lib/dates";
 import { spentOn } from "@/lib/gifts";
 
-export default async function InboxPage() {
-  const [emails, people, gifts, profile] = await Promise.all([listInbound(), listPeople(), listGifts(), getProfile()]);
+export default function InboxPage() {
+  const { inbound: emails, people, gifts, profile } = useData();
   const address = inboxAddress(profile.inbox_token);
   const personName = new Map(people.map((p) => [p.id, p.name]));
   const giftById = new Map(gifts.map((g) => [g.id, g]));
@@ -75,7 +78,7 @@ export default async function InboxPage() {
                     <UndoButton id={e.id} />
                   </div>
                   {gift ? (
-                    <Link href={`/gifts/${gift.id}`} className="text-[15px] font-semibold">
+                    <Link href={`/gifts/edit?id=${gift.id}`} className="text-[15px] font-semibold">
                       {gift.name}
                       {who ? ` for ${who}` : ""}
                     </Link>

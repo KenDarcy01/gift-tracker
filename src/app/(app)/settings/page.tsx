@@ -1,14 +1,18 @@
+"use client";
+
 import Link from "next/link";
-import { signOut } from "@/app/actions";
+import { useRouter } from "next/navigation";
 import { PageTitle } from "@/components/bits";
 import { CopyButton } from "@/components/copy-button";
 import { ForwardingGuide } from "@/components/forwarding-guide";
 import { ChevronIcon, MailIcon } from "@/components/icons";
 import { SettingsForm } from "@/components/settings-form";
-import { getProfile, inboxAddress, listPeople } from "@/lib/data";
+import { useData } from "@/lib/store";
+import { inboxAddress, supabase } from "@/lib/supabase/client";
 
-export default async function SettingsPage() {
-  const [profile, people] = await Promise.all([getProfile(), listPeople()]);
+export default function SettingsPage() {
+  const { profile, people } = useData();
+  const router = useRouter();
   const address = inboxAddress(profile.inbox_token);
   const allocated = people.reduce((sum, p) => sum + p.budget, 0);
 
@@ -59,9 +63,18 @@ export default async function SettingsPage() {
         </Link>
       </section>
 
-      <form action={signOut} className="flex justify-center">
-        <button type="submit" className="min-h-11 text-[15px] font-semibold text-muted">Sign out</button>
-      </form>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={async () => {
+            await supabase().auth.signOut();
+            router.replace("/login/");
+          }}
+          className="min-h-11 text-[15px] font-semibold text-muted"
+        >
+          Sign out
+        </button>
+      </div>
     </>
   );
 }

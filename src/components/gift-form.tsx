@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
-import { saveGift, type FormState } from "@/app/actions";
+import { useMemo, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { saveGift } from "@/lib/mutations";
+import { useData } from "@/lib/store";
 import { CARRIERS, detectCarrier, getCarrier, trackingUrlFor } from "@/lib/carriers";
 import { STATUS_CHIP, STATUS_LABEL } from "@/lib/gifts";
 import { STATUSES, type Gift, type GiftStatus, type Person } from "@/lib/types";
@@ -17,7 +19,10 @@ type Props = {
 };
 
 export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Props) {
-  const [state, action, pending] = useActionState<FormState, FormData>(saveGift, {});
+  const router = useRouter();
+  const { reload } = useData();
+  const [error, setError] = useState<string>();
+  const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<GiftStatus>(gift?.status ?? "idea");
   const [tracking, setTracking] = useState(gift?.tracking_number ?? "");
   const [carrierChoice, setCarrierChoice] = useState<string>(gift?.carrier ?? "auto");
@@ -33,12 +38,24 @@ export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Pro
   const daysLate = late ? Math.round((Date.parse(today) - Date.parse(expected)) / 86_400_000) : 0;
   const safeProductUrl = /^https?:\/\//i.test(url) ? url : url ? `https://${url}` : "";
 
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    const result = await saveGift(new FormData(e.currentTarget));
+    if (result.error) {
+      setError(result.error);
+      setPending(false);
+      return;
+    }
+    await reload();
+    router.push(returnTo ?? `/people/view?id=${result.id}`);
+  }
+
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
       {gift && <input type="hidden" name="id" value={gift.id} />}
-      {returnTo && <input type="hidden" name="return_to" value={returnTo} />}
       <input type="hidden" name="carrier" value={carrierId} />
-      <FormError message={state.error} />
+      <FormError message={error} />
 
       <section aria-label="Gift" className="card flex flex-col gap-3.5 p-4">
         <div className="flex flex-col gap-1.5">

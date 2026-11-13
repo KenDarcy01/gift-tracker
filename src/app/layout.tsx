@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import "./globals.css";
 
+const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -15,8 +17,8 @@ export const metadata: Metadata = {
   applicationName: "Gift Tracker",
   appleWebApp: { capable: true, title: "Gifts", statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    icon: [{ url: `${base}/icons/icon-192.png`, sizes: "192x192", type: "image/png" }],
+    apple: [{ url: `${base}/icons/apple-touch-icon.png`, sizes: "180x180" }],
   },
 };
 

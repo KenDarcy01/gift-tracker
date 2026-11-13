@@ -1,16 +1,31 @@
+"use client";
+
+import { Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BackLink, BudgetBar, Initial, StatusChip } from "@/components/bits";
 import { PlusIcon, TruckIcon } from "@/components/icons";
-import { getPerson, getProfile, listGifts, listPeople } from "@/lib/data";
+import { useData } from "@/lib/store";
+import { NotFound } from "@/components/not-found";
 import { shortDate, todayISO } from "@/lib/dates";
 import { STATUS_BAR, budgetLevel, ideasTotal, inTransit, isLate, spentOn } from "@/lib/gifts";
 import { money, moneyExact } from "@/lib/money";
 import { getCarrier } from "@/lib/carriers";
 import { STATUSES, type Gift } from "@/lib/types";
 
-export default async function PersonPage({ params }: PageProps<"/people/[id]">) {
-  const { id } = await params;
-  const [person, profile, people, allGifts] = await Promise.all([getPerson(id), getProfile(), listPeople(), listGifts()]);
+export default function PersonPage() {
+  return (
+    <Suspense>
+      <Person />
+    </Suspense>
+  );
+}
+
+function Person() {
+  const id = useSearchParams().get("id");
+  const { profile, people, gifts: allGifts } = useData();
+  const person = people.find((p) => p.id === id);
+  if (!person) return <NotFound what="person" back="/people" />;
   const index = people.findIndex((p) => p.id === person.id);
   const today = todayISO();
   const order = (g: Gift) => (g.status === "idea" ? 1 : 0);
@@ -25,7 +40,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
     <>
       <div className="flex items-center justify-between">
         <BackLink href="/people">People</BackLink>
-        <Link href={`/people/${person.id}/edit`} className="flex min-h-11 items-center px-3 text-[15px] font-semibold text-pine">
+        <Link href={`/people/edit?id=${person.id}`} className="flex min-h-11 items-center px-3 text-[15px] font-semibold text-pine">
           Edit
         </Link>
       </div>
@@ -91,7 +106,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[id]">) 
           return (
             <Link
               key={g.id}
-              href={`/gifts/${g.id}`}
+              href={`/gifts/edit?id=${g.id}`}
               className={`card flex flex-col gap-2.5 px-4 py-3.5 ${idea ? "border-dashed border-[#cfc6b6]" : ""} ${late ? "border-berry-line" : ""}`}
             >
               <span className="flex justify-between gap-3">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignInbound, dismissInbound } from "@/app/inbox-actions";
+import { assignInbound, dismissInbound, type Result } from "@/lib/mutations";
+import { useData } from "@/lib/store";
 import { getCarrier } from "@/lib/carriers";
 import { money, moneyExact } from "@/lib/money";
 import { shortDate } from "@/lib/dates";
@@ -26,7 +27,15 @@ export function InboxOrderCard({
   reason: string | null;
 }) {
   const [personId, setPersonId] = useState<string | null>(suggestedId);
+  const { reload } = useData();
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const run = (fn: () => Promise<Result>) =>
+    start(async () => {
+      const result = await fn();
+      setError(result.error ?? null);
+      await reload();
+    });
   const person = people.find((p) => p.id === personId);
   const price = extracted.total ?? extracted.items.reduce((s, i) => s + (i.price ?? 0), 0);
   const remain = person ? person.left - price : 0;
@@ -48,7 +57,7 @@ export function InboxOrderCard({
         </div>
         <button
           type="button"
-          onClick={() => start(() => dismissInbound(id))}
+          onClick={() => run(() => dismissInbound(id))}
           className="min-h-9 px-1 text-[13px] font-semibold whitespace-nowrap text-muted"
         >
           Not a gift
@@ -109,10 +118,11 @@ export function InboxOrderCard({
           </p>
         )}
       </div>
+      {error && <p role="alert" className="text-[13px] font-semibold text-berry">{error}</p>}
       <button
         type="button"
         disabled={!person || pending}
-        onClick={() => person && start(() => assignInbound(id, person.id))}
+        onClick={() => person && run(() => assignInbound(id, extracted, person.id))}
         className="btn-primary min-h-12"
       >
         {pending ? "Adding…" : person ? `Add to ${person.name}'s gifts` : "Choose a person"}

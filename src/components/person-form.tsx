@@ -1,16 +1,35 @@
 "use client";
 
-import { useActionState } from "react";
-import { savePerson, type FormState } from "@/app/actions";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { savePerson } from "@/lib/mutations";
+import { useData } from "@/lib/store";
 import type { Person } from "@/lib/types";
 import { FormError } from "./bits";
 
 export function PersonForm({ person }: { person?: Person }) {
-  const [state, action, pending] = useActionState<FormState, FormData>(savePerson, {});
+  const router = useRouter();
+  const { reload } = useData();
+  const [error, setError] = useState<string>();
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    const result = await savePerson(new FormData(e.currentTarget));
+    if (result.error) {
+      setError(result.error);
+      setPending(false);
+      return;
+    }
+    await reload();
+    router.push(`/people/view?id=${result.id}`);
+  }
+
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {person && <input type="hidden" name="id" value={person.id} />}
-      <FormError message={state.error} />
+      <FormError message={error} />
       <div className="card flex flex-col gap-3.5 p-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="name" className="label">Name</label>
