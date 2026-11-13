@@ -30,7 +30,7 @@ jobs:
       - name: Deploy gift-inbound
         if: env.SUPABASE_ACCESS_TOKEN != ''
         # Resend signs each request, so Supabase's own JWT check is off.
-        run: supabase functions deploy gift-inbound --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
+        run: supabase functions deploy gift-inbound --remote="$PROJECT_REF" --no-verify-jwt --use-api --yes
       - name: Explain skipped deploy
         if: env.SUPABASE_ACCESS_TOKEN == ''
         run: echo "::warning::Add a SUPABASE_ACCESS_TOKEN repository secret to deploy Edge Functions automatically."
