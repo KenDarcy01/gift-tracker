@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { carrierFromName, detectCarrier, normaliseTracking, trackingUrlFor } from "./carriers";
 import { extractEmail, extractionEnabled } from "./extract";
-import { todayISO } from "./dates";
+import { shortDate, todayISO } from "./dates";
 import { moneyExact } from "./money";
 import { STATUSES, type Gift, type GiftStatus } from "./types";
 
@@ -191,7 +191,7 @@ function snapshot(g: Gift) {
 function describeUpdate(before: Gift, after: Partial<Gift>): string {
   const parts: string[] = [];
   if (after.status && after.status !== before.status) parts.push(`${cap(before.status)} to ${cap(after.status)}`);
-  if (after.expected_delivery && after.expected_delivery !== before.expected_delivery) parts.push(`due ${after.expected_delivery}`);
+  if (after.expected_delivery && after.expected_delivery !== before.expected_delivery) parts.push(`due ${shortDate(after.expected_delivery)}`);
   if (after.tracking_number && after.tracking_number !== before.tracking_number) parts.push(`tracking ${after.tracking_number} added`);
   return parts.length ? parts.join(" · ") : `No changes needed (${moneyExact(Number(before.cost))})`;
 }

@@ -85,7 +85,7 @@ create trigger gifts_touch before update on public.gifts
   for each row execute function public.gift_touch_updated_at();
 
 -- Make sure a gift's person belongs to the same user.
-create function public.check_gift_person() returns trigger
+create function public.gift_check_person() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   if not exists (
@@ -97,7 +97,7 @@ begin
 end;
 $$;
 create trigger gifts_check_person before insert or update of person_id, user_id on public.gifts
-  for each row execute function public.check_gift_person();
+  for each row execute function public.gift_check_person();
 
 -- Create a profile when someone signs up.
 create function public.gift_handle_new_user() returns trigger
@@ -105,13 +105,17 @@ language plpgsql security definer set search_path = '' as $$
 begin
   insert into public.gift_profiles (id) values (new.id) on conflict do nothing;
   return new;
+exception when others then
+  -- Never block sign-ups for other apps sharing this project.
+  raise warning 'gift_handle_new_user failed: %', sqlerrm;
+  return new;
 end;
 $$;
 create trigger gift_on_auth_user_created after insert on auth.users
   for each row execute function public.gift_handle_new_user();
 
 revoke execute on function public.gift_handle_new_user() from public, anon, authenticated;
-revoke execute on function public.check_gift_person() from public, anon, authenticated;
+revoke execute on function public.gift_check_person() from public, anon, authenticated;
 revoke execute on function public.gift_touch_updated_at() from public, anon, authenticated;
 
 -- Row level security: each user sees and changes only their own rows.
@@ -138,6 +142,9 @@ create policy "gift: own inbound update" on public.gift_inbound_emails for updat
   using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create policy "gift: own inbound delete" on public.gift_inbound_emails for delete to authenticated
   using (user_id = (select auth.uid()));
+
+-- Signed-out visitors get nothing.
+revoke all on public.gift_profiles, public.gift_people, public.gifts, public.gift_inbound_emails from anon;
 
 -- Users may change their budget settings but not their inbox token.
 revoke update on public.gift_profiles from authenticated;

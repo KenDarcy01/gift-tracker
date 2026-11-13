@@ -16,11 +16,14 @@ export const requireUserId = cache(async (): Promise<string> => {
 export const getProfile = cache(async (): Promise<Profile> => {
   const userId = await requireUserId();
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("gift_profiles")
-    .select("id, overall_budget, warn_pct, inbox_token")
-    .eq("id", userId)
-    .single();
+  const select = () =>
+    supabase.from("gift_profiles").select("id, overall_budget, warn_pct, inbox_token").eq("id", userId).maybeSingle();
+  let { data, error } = await select();
+  if (!error && !data) {
+    // Accounts created before the gift tracker existed, or that started anonymous elsewhere.
+    await supabase.from("gift_profiles").insert({ id: userId });
+    ({ data, error } = await select());
+  }
   if (error || !data) throw new Error(`Could not load your settings: ${error?.message ?? "missing"}`);
   return { ...data, overall_budget: Number(data.overall_budget) };
 });

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { assignInbound, dismissInbound } from "@/app/inbox-actions";
 import { getCarrier } from "@/lib/carriers";
 import { money, moneyExact } from "@/lib/money";
+import { shortDate } from "@/lib/dates";
 import type { ExtractedEmail } from "@/lib/types";
 import { TruckIcon } from "./icons";
 
@@ -48,7 +49,7 @@ export function InboxOrderCard({
         <button
           type="button"
           onClick={() => start(() => dismissInbound(id))}
-          className="min-h-9 px-1 text-[13px] font-semibold text-muted"
+          className="min-h-9 px-1 text-[13px] font-semibold whitespace-nowrap text-muted"
         >
           Not a gift
         </button>
@@ -64,7 +65,7 @@ export function InboxOrderCard({
       <p className="flex items-center gap-1.5 text-[13px] text-muted">
         <TruckIcon size={16} />
         {extracted.tracking_number
-          ? [carrier, extracted.expected_delivery ? `arriving ${extracted.expected_delivery}` : null, extracted.tracking_number]
+          ? [carrier, extracted.expected_delivery ? `arriving ${shortDate(extracted.expected_delivery)}` : null, extracted.tracking_number]
               .filter(Boolean)
               .join(" · ")
           : "Not shipped yet. It'll update when the dispatch email arrives."}
