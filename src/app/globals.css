@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ground: #f7f4ee;
+  --color-card: #ffffff;
+  --color-line: #e7e1d6;
+  --color-line-soft: #efeae1;
+  --color-field: #d9d2c5;
+  --color-ink: #1c1b19;
+  --color-muted: #5f5a52;
+  --color-pine: #1e5b45;
+  --color-pine-dark: #143e2f;
+  --color-pine-soft: #d5e6dd;
+  --color-ok: #2e7d5b;
+  --color-gold: #f3c46b;
+  --color-berry: #a3242b;
+  --color-berry-dark: #8e1f27;
+  --color-berry-soft: #fbe9ea;
+  --color-berry-line: #efc3c7;
+  --color-amber: #d98b10;
+  --color-amber-ink: #8a4b00;
+  --color-amber-soft: #fcebd0;
+
+  --color-st-idea: #4a463f;
+  --color-st-idea-bg: #eeece8;
+  --color-st-purchased: #1d4e9e;
+  --color-st-purchased-bg: #e3ecfa;
+  --color-st-shipped: #5b3a9e;
+  --color-st-shipped-bg: #ede6f8;
+  --color-st-delivered: #1e6b4c;
+  --color-st-delivered-bg: #dff1ea;
+  --color-st-wrapped: #8a4b00;
+  --color-st-wrapped-bg: #fcebd0;
+  --color-st-given: #8e1f27;
+  --color-st-given-bg: #f9e1e3;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-inter), sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.field {
+  @apply min-h-11 w-full rounded-[10px] border border-field bg-card px-3 text-[15px] text-ink outline-none focus:border-pine focus:ring-2 focus:ring-pine/20;
+}
+
+.label {
+  @apply text-[13px] font-semibold text-muted;
+}
+
+.card {
+  @apply rounded-2xl border border-line bg-card;
+}
+
+.btn-primary {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-pine px-4 text-[15px] font-semibold text-white hover:bg-pine-dark disabled:opacity-60;
+}
+
+.btn-secondary {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-pine bg-card px-4 text-[15px] font-semibold text-pine hover:bg-pine-soft/40 disabled:opacity-60;
 }
