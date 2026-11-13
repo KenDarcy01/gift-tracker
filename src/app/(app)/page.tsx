@@ -37,12 +37,16 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      <section aria-label="Budget" className="flex flex-col gap-3.5 rounded-[20px] bg-pine p-5 text-white">
+      <Link
+        href="/gifts?status=bought&sort=cost-desc"
+        aria-label={`Spent so far: ${moneyExact(spent)}. See everything you've bought`}
+        className="flex flex-col gap-3.5 rounded-[20px] bg-pine p-5 text-white"
+      >
         <div className="flex flex-col gap-0.5">
           <p className="text-[13px] font-medium text-pine-soft">Spent so far</p>
           <p className="font-display text-[40px] leading-[1.1] font-bold">{moneyExact(spent)}</p>
           <p className="text-[14px] text-pine-soft">
-            {budget > 0 ? `of your ${moneyExact(budget)} budget` : <Link href="/settings" className="text-white underline">Set an overall budget</Link>}
+            {budget > 0 ? `of your ${moneyExact(budget)} budget` : "No overall budget yet (set one in Settings)"}
           </p>
         </div>
         {budget > 0 && (
@@ -52,11 +56,12 @@ export default function DashboardPage() {
         )}
         <div className="flex justify-between text-[13px] font-medium">
           <span>{budget > 0 ? (spent > budget ? `${moneyExact(spent - budget)} over` : `${moneyExact(budget - spent)} left`) : ""}</span>
-          <span>
+          <span className="flex items-center gap-1">
             {gifts.length} {gifts.length === 1 ? "gift" : "gifts"} · {people.length} {people.length === 1 ? "person" : "people"}
+            <ChevronIcon size={16} />
           </span>
         </div>
-      </section>
+      </Link>
 
       {people.length === 0 && (
         <Link href="/people/new" className="card flex items-center gap-3 p-4">
@@ -72,9 +77,14 @@ export default function DashboardPage() {
         <section aria-label="Late deliveries" className="flex flex-col gap-2.5 rounded-2xl border border-berry-line bg-berry-soft p-4">
           <div className="flex items-center gap-2 text-berry-dark">
             <AlertIcon size={20} />
-            <h2 className="text-[15px] font-bold">
+            <h2 className="flex-1 text-[15px] font-bold">
               {late.length} late {late.length === 1 ? "delivery" : "deliveries"}
             </h2>
+            {late.length > 1 && (
+              <Link href="/gifts?status=late&sort=delivery" className="flex min-h-9 items-center text-[13px] font-semibold">
+                See all
+              </Link>
+            )}
           </div>
           {late.map((g) => {
             const overdue = daysBetween(g.expected_delivery!, today);
@@ -98,13 +108,16 @@ export default function DashboardPage() {
       )}
 
       <section aria-labelledby="status-h" className="flex flex-col gap-2.5">
-        <h2 id="status-h" className="text-[16px] font-bold">Gifts by status</h2>
+        <div className="flex items-baseline justify-between">
+          <h2 id="status-h" className="text-[16px] font-bold">Gifts by status</h2>
+          <Link href="/gifts" className="flex min-h-9 items-center text-[13px] font-semibold text-pine">All gifts</Link>
+        </div>
         <div className="grid grid-cols-3 gap-2">
           {STATUSES.map((s) => (
-            <div key={s} className="card flex flex-col gap-1.5 rounded-[14px] p-3">
+            <Link key={s} href={`/gifts?status=${s}`} className="card flex flex-col gap-1.5 rounded-[14px] p-3 active:bg-ground">
               <span className="font-display text-[26px] font-bold">{gifts.filter((g) => g.status === s).length}</span>
               <StatusChip status={s} className="self-start" />
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -112,9 +125,9 @@ export default function DashboardPage() {
       <section aria-labelledby="arriving-h" className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between">
           <h2 id="arriving-h" className="text-[16px] font-bold">Arriving this week</h2>
-          <span className="text-[13px] text-muted">
-            {arriving.length} {arriving.length === 1 ? "parcel" : "parcels"}
-          </span>
+          <Link href="/gifts?status=in-transit&sort=delivery" className="flex min-h-9 items-center text-[13px] font-semibold text-pine">
+            {arriving.length} {arriving.length === 1 ? "parcel" : "parcels"} · all on the way
+          </Link>
         </div>
         {arriving.length === 0 ? (
           <p className="card px-4 py-3.5 text-[14px] text-muted">Nothing due in the next 7 days.</p>

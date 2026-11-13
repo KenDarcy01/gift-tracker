@@ -3,15 +3,15 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BackLink, BudgetBar, Initial, StatusChip } from "@/components/bits";
-import { PlusIcon, TruckIcon } from "@/components/icons";
+import { BackLink, BudgetBar, Initial } from "@/components/bits";
+import { GiftCard } from "@/components/gift-card";
+import { PlusIcon } from "@/components/icons";
 import { useData } from "@/lib/store";
 import { NotFound } from "@/components/not-found";
-import { shortDate, todayISO } from "@/lib/dates";
-import { STATUS_BAR, budgetLevel, ideasTotal, inTransit, isLate, spentOn } from "@/lib/gifts";
+import { todayISO } from "@/lib/dates";
+import { budgetLevel, ideasTotal, isLate, spentOn } from "@/lib/gifts";
 import { money, moneyExact } from "@/lib/money";
-import { getCarrier } from "@/lib/carriers";
-import { STATUSES, type Gift } from "@/lib/types";
+import type { Gift } from "@/lib/types";
 
 export default function PersonPage() {
   return (
@@ -98,67 +98,17 @@ function Person() {
         {gifts.length === 0 && <p className="card p-4 text-[14px] text-muted">No gifts or ideas yet.</p>}
 
         {gifts.map((g) => {
-          const step = STATUSES.indexOf(g.status);
-          const late = isLate(g, today);
-          const idea = g.status === "idea";
-          const wouldBeOver = idea && person.budget > 0 && spent + g.cost > person.budget;
-          const carrier = getCarrier(g.carrier)?.name;
+          const wouldBeOver = g.status === "idea" && person.budget > 0 && spent + g.cost > person.budget;
           return (
-            <Link
+            <GiftCard
               key={g.id}
-              href={`/gifts/edit?id=${g.id}`}
-              className={`card flex flex-col gap-2.5 px-4 py-3.5 ${idea ? "border-dashed border-[#cfc6b6]" : ""} ${late ? "border-berry-line" : ""}`}
-            >
-              <span className="flex justify-between gap-3">
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-[15px] font-semibold">{g.name}</span>
-                  {g.store && <span className="text-[13px] text-muted">{g.store}</span>}
-                </span>
-                <span className={`text-[15px] font-semibold ${idea ? "text-muted" : ""}`}>
-                  {idea && g.cost > 0 ? "~" : ""}
-                  {moneyExact(g.cost)}
-                </span>
-              </span>
-              <span className="flex items-center justify-between gap-2">
-                <StatusChip status={g.status} />
-                <GiftMeta gift={g} late={late} carrier={carrier} wouldBeOverBy={wouldBeOver ? spent + g.cost - person.budget : 0} />
-              </span>
-              {!idea && (
-                <span aria-label={`Progress: ${g.status}, step ${step + 1} of 6`} className="grid grid-cols-6 gap-1">
-                  {STATUSES.map((s, i) => (
-                    <span key={s} className={`h-1 rounded-sm ${i <= step ? STATUS_BAR[g.status] : "bg-line"}`} />
-                  ))}
-                </span>
-              )}
-            </Link>
+              gift={g}
+              late={isLate(g, today)}
+              wouldBeOverBy={wouldBeOver ? spent + g.cost - person.budget : 0}
+            />
           );
         })}
       </section>
     </>
   );
-}
-
-function GiftMeta({ gift, late, carrier, wouldBeOverBy }: { gift: Gift; late: boolean; carrier?: string; wouldBeOverBy: number }) {
-  if (gift.status === "idea") {
-    return wouldBeOverBy > 0 ? (
-      <span className="text-[13px] font-semibold text-berry">Would take them {money(wouldBeOverBy)} over</span>
-    ) : (
-      <span className="text-[13px] text-muted">Not bought yet</span>
-    );
-  }
-  if (late) {
-    return <span className="text-[13px] font-semibold text-berry">Late · was due {shortDate(gift.expected_delivery!)}</span>;
-  }
-  if (inTransit(gift.status) && (carrier || gift.expected_delivery)) {
-    return (
-      <span className="flex items-center gap-1.5 text-[13px] text-muted">
-        <TruckIcon size={16} />
-        {[carrier, gift.expected_delivery ? `arriving ${shortDate(gift.expected_delivery)}` : null].filter(Boolean).join(" · ")}
-      </span>
-    );
-  }
-  if (gift.delivered_on && gift.status === "delivered") {
-    return <span className="text-[13px] text-muted">Delivered {shortDate(gift.delivered_on)}</span>;
-  }
-  return null;
 }

@@ -7,6 +7,7 @@ Built with Next.js 16 (App Router, static export), Supabase (Postgres, auth, row
 ## Screens
 
 - **Home**: spent vs overall budget, gifts by status, parcels arriving this week, late deliveries.
+- **Gifts**: every gift in one list, filtered by person, status (including late and on the way) or store, and sorted by date, cost, person or name. Home's cards open it pre-filtered.
 - **People**: everyone on your list with a budget bar (amber near the limit, red when over).
 - **Person**: their notes, sizes and gifts with status and delivery progress.
 - **Add / edit gift**: store, cost, status, tracking number (carrier is detected automatically), expected delivery and tracking link.

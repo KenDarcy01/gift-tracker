@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, InboxIcon, PeopleIcon, SettingsIcon } from "./icons";
+import { GiftIcon, HomeIcon, InboxIcon, PeopleIcon, SettingsIcon } from "./icons";
 
 const TABS = [
-  { href: "/", label: "Home", Icon: HomeIcon, match: (p: string) => p === "/" || p.startsWith("/gifts") },
+  { href: "/", label: "Home", Icon: HomeIcon, match: (p: string) => p === "/" },
+  { href: "/gifts", label: "Gifts", Icon: GiftIcon, match: (p: string) => p.startsWith("/gifts") },
   { href: "/people", label: "People", Icon: PeopleIcon, match: (p: string) => p.startsWith("/people") },
   { href: "/inbox", label: "Inbox", Icon: InboxIcon, match: (p: string) => p.startsWith("/inbox") },
   { href: "/settings", label: "Settings", Icon: SettingsIcon, match: (p: string) => p.startsWith("/settings") },
@@ -18,7 +19,7 @@ export function BottomNav({ inboxCount }: { inboxCount: number }) {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card pb-[max(env(safe-area-inset-bottom),10px)]"
     >
-      <div className="mx-auto grid max-w-md grid-cols-4 px-2 pt-2">
+      <div className="mx-auto grid max-w-md grid-cols-5 px-2 pt-2">
         {TABS.map(({ href, label, Icon, match }) => {
           const active = match(pathname);
           return (
