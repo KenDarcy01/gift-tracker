@@ -5,7 +5,7 @@ import { STATUS_BAR, inTransit } from "@/lib/gifts";
 import { money, moneyExact } from "@/lib/money";
 import { STATUSES, type Gift } from "@/lib/types";
 import { StatusChip } from "./bits";
-import { TruckIcon } from "./icons";
+import { PeopleIcon, TruckIcon } from "./icons";
 
 /** One gift as a tappable card: name, store, cost, status and delivery progress. */
 export function GiftCard({
@@ -23,16 +23,22 @@ export function GiftCard({
 }) {
   const step = STATUSES.indexOf(g.status);
   const idea = g.status === "idea";
-  const sub = [personName ? `For ${personName}` : null, g.store].filter(Boolean).join(" · ");
+
   return (
     <Link
       href={`/gifts/edit?id=${g.id}`}
       className={`card flex flex-col gap-2.5 px-4 py-3.5 ${idea ? "border-dashed border-[#cfc6b6]" : ""} ${late ? "border-berry-line" : ""}`}
     >
+      {personName && (
+        <span className="flex items-center gap-1.5 self-start rounded-full bg-pine py-1 pr-3 pl-2 text-[13px] font-bold text-white">
+          <PeopleIcon size={14} />
+          For {personName}
+        </span>
+      )}
       <span className="flex justify-between gap-3">
         <span className="flex flex-col gap-0.5">
           <span className="text-[15px] font-semibold">{g.name}</span>
-          {sub && <span className="text-[13px] text-muted">{sub}</span>}
+          {g.store && <span className="text-[13px] text-muted">{g.store}</span>}
         </span>
         <span className={`text-[15px] font-semibold whitespace-nowrap ${idea ? "text-muted" : ""}`}>
           {idea && g.cost > 0 ? "~" : ""}
