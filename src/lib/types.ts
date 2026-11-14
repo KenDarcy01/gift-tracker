@@ -1,12 +1,17 @@
 export const STATUSES = ["idea", "purchased", "shipped", "delivered", "wrapped", "given"] as const;
 export type GiftStatus = (typeof STATUSES)[number];
 
+/** A shared gift list: everyone in it sees the same people, gifts, budgets and inbox. */
 export type Profile = {
-  id: string;
+  id: string; // household id
   overall_budget: number;
   warn_pct: number;
+  currency: string;
   inbox_token: string;
 };
+
+/** Someone sharing the list, or invited to. */
+export type SharePerson = { kind: "member" | "invite"; id: string; email: string; is_me: boolean; since: string };
 
 export type Person = {
   id: string;

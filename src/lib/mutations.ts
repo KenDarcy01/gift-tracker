@@ -112,21 +112,35 @@ export async function deleteGift(id: string): Promise<Result> {
 
 /* ---------- Settings ---------- */
 
-export async function saveSettings(userId: string, form: FormData): Promise<Result> {
+export async function saveSettings(householdId: string, form: FormData): Promise<Result> {
   const overall = parseMoney(form.get("overall_budget"));
   const warn = Number(form.get("warn_pct"));
   if (Number.isNaN(overall)) return { error: "Budget should be an amount like 700." };
   if (!Number.isInteger(warn) || warn < 50 || warn > 100) return { error: "Warning level must be 50–100%." };
   const currency = text(form, "currency", 3);
   if (currency && !isCurrency(currency)) return { error: "Pick a currency from the list." };
-  const db = supabase();
-  const { error } = await db.from("gift_profiles").update({ overall_budget: overall, warn_pct: warn }).eq("id", userId);
-  if (error) return { error: error.message };
-  if (currency) {
-    const res = await db.auth.updateUser({ data: { gift_currency: currency } });
-    if (res.error) return { error: res.error.message };
-  }
-  return {};
+  const { error } = await supabase()
+    .from("gift_households")
+    .update({ overall_budget: overall, warn_pct: warn, ...(currency ? { currency } : {}) })
+    .eq("id", householdId);
+  return error ? { error: error.message } : {};
+}
+
+/* ---------- Sharing ---------- */
+
+export async function invitePartner(email: string): Promise<Result> {
+  const { error } = await supabase().rpc("gift_invite", { invitee: email });
+  return error ? { error: error.message } : {};
+}
+
+export async function cancelInvite(id: string): Promise<Result> {
+  const { error } = await supabase().from("gift_invites").delete().eq("id", id);
+  return error ? { error: error.message } : {};
+}
+
+export async function leaveHousehold(): Promise<Result> {
+  const { error } = await supabase().rpc("gift_leave_household");
+  return error ? { error: error.message } : {};
 }
 
 /* ---------- Inbox ---------- */

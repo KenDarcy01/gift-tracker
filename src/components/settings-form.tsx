@@ -7,14 +7,14 @@ import { useData } from "@/lib/store";
 import { FormError } from "./bits";
 
 export function SettingsForm({ overall, warn, allocated, peopleCount }: { overall: number; warn: number; allocated: number; peopleCount: number }) {
-  const { userId, reload } = useData();
+  const { profile, reload } = useData();
   const [state, setState] = useState<{ error?: string; ok?: boolean }>({});
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
-    const result = await saveSettings(userId, new FormData(e.currentTarget));
+    const result = await saveSettings(profile.id, new FormData(e.currentTarget));
     if (!result.error) await reload();
     setState(result.error ? { error: result.error } : { ok: true });
     setPending(false);

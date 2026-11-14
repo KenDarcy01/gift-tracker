@@ -4,7 +4,7 @@ import type { Extraction } from "./extract.ts";
 
 export type ReceivedEmail = {
   providerId: string;
-  userId: string;
+  householdId: string;
   from: string | null;
   subject: string | null;
   receivedAt: string;
@@ -90,7 +90,7 @@ function advance(current: GiftStatus, to: GiftStatus): GiftStatus {
 
 export async function processEmail(db: SupabaseClient, email: ReceivedEmail, extract: Extractor | null): Promise<void> {
   const base = {
-    user_id: email.userId,
+    household_id: email.householdId,
     provider_id: email.providerId,
     from_address: email.from,
     subject: email.subject,
@@ -113,7 +113,7 @@ export async function processEmail(db: SupabaseClient, email: ReceivedEmail, ext
     return;
   }
 
-  const { data: people } = await db.from("gift_people").select("id, name, relation, notes").eq("user_id", email.userId);
+  const { data: people } = await db.from("gift_people").select("id, name, relation, notes").eq("household_id", email.householdId);
 
   const extracted = await extract({
     subject: email.subject,
@@ -142,7 +142,7 @@ export async function processEmail(db: SupabaseClient, email: ReceivedEmail, ext
   const trackingUrl = safeHttpUrl(extracted.tracking_url) ?? trackingUrlFor(carrier?.id, tracking);
 
   // Is this about a gift we already have?
-  const existing = await findExistingGift(db, email.userId, tracking, extracted.order_ref);
+  const existing = await findExistingGift(db, email.householdId, tracking, extracted.order_ref);
   if (existing) {
     let status: GiftStatus = existing.status;
     if (tracking || extracted.delivery_status === "dispatched" || extracted.delivery_status === "out_for_delivery") {
@@ -160,7 +160,7 @@ export async function processEmail(db: SupabaseClient, email: ReceivedEmail, ext
       order_ref: existing.order_ref ?? extracted.order_ref,
       delivered_on: status === "delivered" && !existing.delivered_on ? todayISO() : existing.delivered_on,
     };
-    const { error } = await db.from("gifts").update(update).eq("id", existing.id).eq("user_id", email.userId);
+    const { error } = await db.from("gifts").update(update).eq("id", existing.id).eq("household_id", email.householdId);
     if (error) throw new Error(error.message);
 
     await save(db, {
@@ -195,17 +195,17 @@ export async function processEmail(db: SupabaseClient, email: ReceivedEmail, ext
 }
 
 async function save(db: SupabaseClient, row: Record<string, unknown>) {
-  const { error } = await db.from("gift_inbound_emails").upsert(row, { onConflict: "user_id,provider_id", ignoreDuplicates: true });
+  const { error } = await db.from("gift_inbound_emails").upsert(row, { onConflict: "household_id,provider_id", ignoreDuplicates: true });
   if (error) throw new Error(error.message);
 }
 
-async function findExistingGift(db: SupabaseClient, userId: string, tracking: string | null, orderRef: string | null): Promise<Gift | null> {
+async function findExistingGift(db: SupabaseClient, householdId: string, tracking: string | null, orderRef: string | null): Promise<Gift | null> {
   if (tracking) {
-    const { data } = await db.from("gifts").select("*").eq("user_id", userId).eq("tracking_number", tracking).limit(1);
+    const { data } = await db.from("gifts").select("*").eq("household_id", householdId).eq("tracking_number", tracking).limit(1);
     if (data?.[0]) return data[0] as Gift;
   }
   if (orderRef) {
-    const { data } = await db.from("gifts").select("*").eq("user_id", userId).eq("order_ref", orderRef).limit(1);
+    const { data } = await db.from("gifts").select("*").eq("household_id", householdId).eq("order_ref", orderRef).limit(1);
     if (data?.[0]) return data[0] as Gift;
   }
   return null;

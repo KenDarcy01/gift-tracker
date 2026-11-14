@@ -7,6 +7,7 @@ import { CopyButton } from "@/components/copy-button";
 import { ForwardingGuide } from "@/components/forwarding-guide";
 import { ChevronIcon, MailIcon } from "@/components/icons";
 import { SettingsForm } from "@/components/settings-form";
+import { SharingCard } from "@/components/sharing-card";
 import { useData } from "@/lib/store";
 import { inboxAddress, supabase } from "@/lib/supabase/client";
 
@@ -20,6 +21,8 @@ export default function SettingsPage() {
     <>
       <PageTitle>Settings</PageTitle>
 
+      <SharingCard />
+
       <section aria-labelledby="addr-h" className="card flex flex-col gap-3 p-4">
         <div className="flex items-center gap-2">
           <MailIcon size={20} className="text-pine" />
@@ -28,7 +31,7 @@ export default function SettingsPage() {
         {address ? (
           <>
             <p className="text-[13px] leading-normal text-muted">
-              Forward order and shipping emails here and they show up in your Inbox. It&apos;s private to you.
+              Forward order and shipping emails here and they show up in your Inbox. Everyone sharing this list can use it.
             </p>
             <div className="flex items-center gap-2 rounded-xl border border-line bg-ground py-1.5 pr-1.5 pl-3">
               <span className="min-w-0 flex-1 font-mono text-[13.5px] font-semibold break-all">{address}</span>

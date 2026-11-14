@@ -64,8 +64,8 @@ Deno.serve(async (request) => {
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: profile } = await db.from("gift_profiles").select("id").in("inbox_token", tokens).limit(1).maybeSingle();
-  if (!profile) return json({ ignored: "unknown address" });
+  const { data: household } = await db.from("gift_households").select("id").in("inbox_token", tokens).limit(1).maybeSingle();
+  if (!household) return json({ ignored: "unknown address" });
 
   const res = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(event.data.email_id)}`, {
     headers: { Authorization: `Bearer ${apiKey}` },
@@ -85,7 +85,7 @@ Deno.serve(async (request) => {
       db,
       {
         providerId: event.data.email_id,
-        userId: profile.id,
+        householdId: household.id,
         from: email.from ?? event.data.from ?? null,
         subject: email.subject ?? event.data.subject ?? null,
         receivedAt: email.created_at ?? event.data.created_at ?? event.created_at,

@@ -4,7 +4,7 @@ import { createContext, use, useCallback, useEffect, useState, type ReactNode } 
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { setCurrency } from "@/lib/money";
-import type { Gift, InboundEmail, Person, Profile } from "@/lib/types";
+import type { Gift, InboundEmail, Person, Profile, SharePerson } from "@/lib/types";
 
 export type AppData = {
   userId: string;
@@ -12,6 +12,7 @@ export type AppData = {
   people: Person[];
   gifts: Gift[];
   inbound: InboundEmail[];
+  sharing: SharePerson[];
 };
 
 type Ctx = AppData & { reload: () => Promise<void> };
@@ -20,16 +21,16 @@ const DataContext = createContext<Ctx | null>(null);
 
 async function loadAll(userId: string): Promise<AppData> {
   const db = supabase();
-  const getProfile = () =>
-    db.from("gift_profiles").select("id, overall_budget, warn_pct, inbox_token").eq("id", userId).maybeSingle();
-
-  let profileRes = await getProfile();
-  if (!profileRes.error && !profileRes.data) {
-    // Accounts created before the gift tracker existed, or that started anonymous elsewhere.
-    await db.from("gift_profiles").insert({ id: userId });
-    profileRes = await getProfile();
-  }
-  const [peopleRes, giftsRes, inboundRes] = await Promise.all([
+  // Joins the household you were invited to, or sets up your own the first time.
+  const joined = await db.rpc("gift_join_household");
+  if (joined.error) throw new Error(joined.error.message);
+  const householdId = joined.data as string;
+  const profileRes = await db
+    .from("gift_households")
+    .select("id, overall_budget, warn_pct, currency, inbox_token")
+    .eq("id", householdId)
+    .single();
+  const [peopleRes, giftsRes, inboundRes, sharingRes] = await Promise.all([
     db.from("gift_people").select("id, name, relation, budget, sizes, notes, created_at").order("created_at"),
     db.from("gifts").select("*").order("created_at"),
     db
@@ -38,8 +39,9 @@ async function loadAll(userId: string): Promise<AppData> {
       .neq("state", "dismissed")
       .order("received_at", { ascending: false })
       .limit(50),
+    db.rpc("gift_household_people"),
   ]);
-  const error = profileRes.error ?? peopleRes.error ?? giftsRes.error ?? inboundRes.error;
+  const error = profileRes.error ?? peopleRes.error ?? giftsRes.error ?? inboundRes.error ?? sharingRes.error;
   if (error || !profileRes.data) throw new Error(error?.message ?? "Couldn't load your settings");
 
   return {
@@ -48,6 +50,7 @@ async function loadAll(userId: string): Promise<AppData> {
     people: (peopleRes.data ?? []).map((p) => ({ ...p, budget: Number(p.budget) })) as Person[],
     gifts: (giftsRes.data ?? []).map((g) => ({ ...g, cost: Number(g.cost) })) as Gift[],
     inbound: (inboundRes.data ?? []) as InboundEmail[],
+    sharing: (sharingRes.data ?? []) as SharePerson[],
   };
 }
 
@@ -65,8 +68,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
     try {
       const loaded = await loadAll(auth.user.id);
-      // Stored on the account so it follows the user to every device.
-      setCurrency(auth.user.user_metadata?.gift_currency);
+      // Shared by everyone on the list.
+      setCurrency(loaded.profile.currency);
       setData(loaded);
       setError(null);
     } catch (e) {

@@ -36,7 +36,7 @@ function fakeDb(tables: Record<string, Record<string, unknown>[]>) {
   return { db: db as unknown as SupabaseClient, writes };
 }
 
-const email = { providerId: "e1", userId: "u1", from: "orders@argos.co.uk", subject: "Your order", receivedAt: "2026-11-13T09:00:00Z", text: "..." };
+const email = { providerId: "e1", householdId: "h1", from: "orders@argos.co.uk", subject: "Your order", receivedAt: "2026-11-13T09:00:00Z", text: "..." };
 const base: Extraction = {
   kind: "order", store: "Argos", order_ref: "A123", items: [{ name: "Lego set", price: 44.99 }], total: 44.99,
   carrier: null, tracking_number: null, tracking_url: null, expected_delivery: null, delivery_status: null,
@@ -57,7 +57,7 @@ Deno.test("spots Gmail forwarding codes", () => {
 });
 
 Deno.test("a new order waits for a person, with a suggestion", async () => {
-  const { db, writes } = fakeDb({ gift_people: [{ id: "p1", name: "Jack", user_id: "u1" }], gifts: [] });
+  const { db, writes } = fakeDb({ gift_people: [{ id: "p1", name: "Jack", household_id: "h1" }], gifts: [] });
   await processEmail(db, email, () => Promise.resolve(base));
   assertEquals(writes.length, 1);
   const row = writes[0].row as Record<string, unknown>;
@@ -65,7 +65,7 @@ Deno.test("a new order waits for a person, with a suggestion", async () => {
 });
 
 Deno.test("a dispatch email updates the matching gift and can be undone", async () => {
-  const gift = { id: "g1", user_id: "u1", status: "purchased", cost: "44.99", carrier: null, tracking_number: null, tracking_url: null, expected_delivery: null, order_ref: "A123", delivered_on: null };
+  const gift = { id: "g1", household_id: "h1", status: "purchased", cost: "44.99", carrier: null, tracking_number: null, tracking_url: null, expected_delivery: null, order_ref: "A123", delivered_on: null };
   const { db, writes } = fakeDb({ gift_people: [], gifts: [gift] });
   await processEmail(db, email, () =>
     Promise.resolve({ ...base, kind: "shipping", tracking_number: "AB 123456789 GB", expected_delivery: "2026-11-17", delivery_status: "dispatched" }),
