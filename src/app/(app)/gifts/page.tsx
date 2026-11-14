@@ -151,7 +151,7 @@ function Picker({ label, value, onChange, children }: { label: string; value: st
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <label htmlFor={id} className="label">{label}</label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className="field min-w-0 pr-7 text-[14px]">
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className="field min-w-0 pr-7">
         {children}
       </select>
     </div>

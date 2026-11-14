@@ -49,7 +49,7 @@ body {
 }
 
 .field {
-  @apply min-h-11 w-full rounded-[10px] border border-field bg-card px-3 text-[15px] text-ink outline-none focus:border-pine focus:ring-2 focus:ring-pine/20;
+  @apply min-h-11 w-full rounded-[10px] border border-field bg-card px-3 text-[16px] text-ink outline-none focus:border-pine focus:ring-2 focus:ring-pine/20;
 }
 
 .label {

@@ -86,7 +86,7 @@ export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Pro
               placeholder="https://"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="field min-w-0 flex-1 text-[14px]"
+              className="field min-w-0 flex-1"
             />
             {safeProductUrl && (
               <a
@@ -206,7 +206,7 @@ export function GiftForm({ gift, people, defaultPersonId, today, returnTo }: Pro
               inputMode="url"
               placeholder={builtTrackingUrl ? "Or paste a different tracking link" : "Paste the tracking link from the email"}
               defaultValue={gift?.tracking_url && gift.tracking_url !== trackingUrlFor(gift.carrier, gift.tracking_number) ? gift.tracking_url : ""}
-              className="field text-[14px]"
+              className="field"
             />
           </div>
         </section>
