@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BudgetBar, BudgetNote, Initial, PageTitle } from "@/components/bits";
+import { PlusIcon } from "@/components/icons";
 import { useData } from "@/lib/store";
 import { spentOn } from "@/lib/gifts";
 import { money } from "@/lib/money";
@@ -20,7 +21,10 @@ export default function PeoplePage() {
         >
           People
         </PageTitle>
-        <Link href="/people/new" className="btn-secondary">Add person</Link>
+        <Link href="/people/new" className="btn-secondary shrink-0 whitespace-nowrap pl-3">
+          <PlusIcon size={18} />
+          Add person
+        </Link>
       </header>
 
       <p className="text-[12px] text-muted">
